@@ -19,7 +19,7 @@ app.use(express.urlencoded({
   extended: false
 }));
 var corsOption = {
-  origin: ["http://localohost:3000", "http://localhost:8000"],
+  origin: ["http://localhost:3000", "http://localhost:8080"],
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOption));

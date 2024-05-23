@@ -21,7 +21,6 @@ export const AuthContextProvider = ({ children }) => {
   const [loginInfo, setLoginInfo] = useState({
     email: "",
     password: "",
-    role: "",
   });
   const [formInfo, setFormInfo] = useState({
     name: "",
@@ -44,6 +43,11 @@ export const AuthContextProvider = ({ children }) => {
   //updating forminfo
   const updateFormInfo = useCallback((info) => {
     setFormInfo(info);
+  }, []);
+
+  //updating loginInfo
+  const updateLoginInfo = useCallback((info) => {
+    setLoginInfo(info);
   }, []);
 
   //register user
@@ -73,48 +77,75 @@ export const AuthContextProvider = ({ children }) => {
   const login = useCallback(
     async (e) => {
       e.preventDefault();
-      setIsLoginLoading(true);
-      setLoginError(null);
-      const response = await postRequest(
-        `${baseurl}/users/login`,
-        JSON.stringify(loginInfo)
-      );
-      setIsLoginLoading(false);
+      setLoading(true);
+      setError(null);
+      console.log("Login info:", loginInfo);
 
-      if (response.error) {
-        setLoginError(response);
-        return;
+      try {
+        const response = await postRequest(
+          `${baseurl}/students/login`,
+          JSON.stringify(loginInfo)
+        );
+        console.log("Login response:", response);
+
+        setLoading(false);
+
+        if (response.error) {
+          setError(response);
+          return;
+        }
+
+        // Check if the response has the expected data
+        if (response && typeof response === "object") {
+          toast.success("Successfully logged in!");
+          localStorage.setItem("user", JSON.stringify(response));
+          console.log("User data stored in localStorage:", response);
+          setUser(response);
+          setError(null);
+        } else {
+          setError({ error: "Unexpected response format" });
+          console.log("Unexpected response format:", response);
+        }
+      } catch (err) {
+        console.error("Login failed:", err);
+        setLoading(false);
+        setError({ error: "Login failed. Please try again." });
       }
-      toast.success("Successfully logged!");
-      localStorage.setItem("user", JSON.stringify(response));
-      setUser(response);
-      setIsAuthenticated(true);
-      setLoginError(null);
+    },
+    [loginInfo]
+  );
+
+  //logout user
+  const logoutUser = useCallback(() => {
+    localStorage.removeItem("user");
+    navigate("/");
+    setUser(null);
+  }, []);
+
+  //create new user
+  const createNewUser = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setLoading(true);
+      setError(null);
+      setMesaage(null);
+      console.log("create user info", formInfo);
+
+      try {
+        const response = await postRequest(
+          `${baseurl}/users/`,
+          JSON.stringify(formInfo)
+        );
+        setLoading(false);
+
+        if (response.error) {
+          toast.error(response);
+          return setError(response);
+        }
+      } catch (error) {}
     },
     [formInfo]
   );
-
-  //create new user
-  const createNewUser = useCallback(async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setMesaage(null);
-    console.log("create user info", formInfo);
-
-    try {
-      const response = await postRequest(
-        `${baseurl}/users/`,
-        JSON.stringify(formInfo)
-      );
-      setLoading(false);
-
-      if (response.error) {
-        toast.error(response);
-        return setError(response);
-      }
-    } catch (error) {}
-  });
 
   return (
     <AuthContext.Provider
@@ -130,6 +161,8 @@ export const AuthContextProvider = ({ children }) => {
         register,
         login,
         updateFormInfo,
+        updateLoginInfo,
+        logoutUser,
       }}
     >
       {children}

@@ -1,5 +1,5 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
+import React, { useContext } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./auth/Login";
 import Register from "./auth/Register";
 import { ToastContainer } from "react-toastify";
@@ -11,12 +11,18 @@ import UpdateCourse from "./views/courses/UpdateCourse";
 import StudentList from "./views/students/StudentList";
 import CreateStudent from "./views/students/CreateStudent";
 import UpdateStudent from "./views/students/UpdateStudent";
+import { AuthContext } from "./context/AuthContext";
 
 const App = () => {
+  const { user } = useContext(AuthContext);
+  console.log("user from app", user);
   return (
     <>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route
+          path="/"
+          element={user ? <Navigate to={"/home"} /> : <Login />}
+        />
         <Route path="/register" element={<Register />} />
         <Route path="/home" element={<Home />}>
           <Route path="courses" element={<CourseList />} />
@@ -24,7 +30,7 @@ const App = () => {
           <Route path="courses/:id" element={<UpdateCourse />} />
           <Route path="students" element={<StudentList />} />
           <Route path="students/create" element={<CreateStudent />} />
-          <Route path="students/edit" element={<UpdateStudent/>} />
+          <Route path="students/edit" element={<UpdateStudent />} />
         </Route>
       </Routes>
       <ToastContainer />
